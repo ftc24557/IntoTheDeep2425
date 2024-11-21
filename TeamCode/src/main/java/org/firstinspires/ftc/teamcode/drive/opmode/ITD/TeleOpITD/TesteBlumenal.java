@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.drive.opmode;
+package org.firstinspires.ftc.teamcode.drive.opmode.ITD.TeleOpITD;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 @Config
-@TeleOp
+@TeleOp(group="TeleOp - Into The Deep")
 public class TesteBlumenal extends LinearOpMode {
     public static double kpPivot = 0.0008;
     public static double kiPivot = 0.00002;
@@ -68,7 +68,7 @@ public class TesteBlumenal extends LinearOpMode {
 
                 bumperClaw = true;
                 if (positionClaw == 0){
-                    positionClaw = 1;
+                    positionClaw = 60;
                 } else{
                     positionClaw = 0;
                 }
@@ -82,10 +82,10 @@ public class TesteBlumenal extends LinearOpMode {
             //Bumper do Slider
             if (!bumperSlider && gamepad2.right_bumper){
                 bumperSlider = true;
-                if (positionSlider == 0.25 && !bracoemcima){
+                if (positionSlider == 0 && !bracoemcima){
                     positionSlider = 1;
                 } else if (!bracoemcima){
-                    positionSlider = 0.25;
+                    positionSlider = 0;
                 }
             }
 
@@ -93,6 +93,18 @@ public class TesteBlumenal extends LinearOpMode {
 
                 bumperSlider = false;
             }
+            if (positionSlider == 0){
+                kpPivot = 0;
+                kiPivot = 0;
+                kdPivot = 0;
+                kfPivot = 0;
+            } else if (positionSlider == 1){
+                kpPivot = 0.0008;
+                kiPivot = 0.00002;
+                kdPivot = 0;
+                kfPivot = 0;
+            }
+
 
             servoSlider.setPosition(positionSlider);
 
