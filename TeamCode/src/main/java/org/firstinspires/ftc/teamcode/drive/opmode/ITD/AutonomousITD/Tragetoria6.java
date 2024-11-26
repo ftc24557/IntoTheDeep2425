@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.drive.opmode.RR;
+package org.firstinspires.ftc.teamcode.drive.opmode.ITD.AutonomousITD;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 @Config
-@Autonomous
+@Autonomous(group = "Auto - Into The Deep")
 public class Tragetoria6 extends LinearOpMode {
 
     @Override
