@@ -95,14 +95,24 @@ public class Auto2Specimen extends LinearOpMode {
         waitForStart();
         armUp();
         servoSlider.setPosition(1);
-        servoPivot.setPosition(0.6);
+        sleep(1000);
+        servoPivot.setPosition(0.5);
         servoClaw.setPosition(1);
         sleep(700);
-        driveForward(30);
+        servoPivot.setPosition(0.5);
+        driveForward(29);
+        servoPivot.setPosition(1);
+        sleep(400);
         servoClaw.setPosition(0);
-        driveForward(-14);
+        driveForward(-25);
+        driveSideways(22);
+        driveForward(50);
         turnToAngle(180);
-        servoPivot.setPosition(0.45);
+        driveSideways(-10);
+        driveForward(40);
+
+        /*turnToAngle(180);
+        servoPivot.setPosition(0.6);
         armDown();
         driveSideways(-30);
         servoClaw.setPosition(0);
@@ -116,7 +126,7 @@ public class Auto2Specimen extends LinearOpMode {
         driveForward(12
         );
         servoClaw.setPosition(0);
-        driveForward(-20);
+        driveForward(-20);*/
         while (!isStopRequested()){
 
         }
@@ -129,9 +139,9 @@ public class Auto2Specimen extends LinearOpMode {
         pivotArm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
     public void armUp(){
-        int setpoint = 10;
+        int setpoint = 20;
         pivotArm.setTargetPosition(setpoint);
-        pivotArm.setPower(0.07);
+        pivotArm.setPower(0.15);
     }
     public void armDown(){
         int setpoint = -900;
@@ -150,7 +160,7 @@ public class Auto2Specimen extends LinearOpMode {
 
         telemetry.addLine("got to position");
         telemetry.update();
-        pivotArm.setPower(0.1);
+        pivotArm.setPower(0.075 );
     }
     public void alignToIntake() {
         double targetDistance = 9;  // Distância desejada em cm
@@ -211,31 +221,35 @@ public class Auto2Specimen extends LinearOpMode {
 
     }
     public void driveSideways(double distance){
-        resetPositions();
-        double x = getEncoderX();  // Usa o encoder X para medir a distância percorrida lateralmente
-        double distanceError = distance - x;
-        double threshold = 1;
+        resetPositions();  // Reseta os encoders e o IMU
+        double x = getEncoderX();  // Posição no eixo X
+        double y = getEncoderY();  // Posição no eixo Y
+        double distanceError = distance - x;  // Erro de distância no eixo X
+        double threshold = 1;  // Limite de erro
 
-        double kPdistance = 0.01; // Proporcional para a distância
-        double kPangle = 0.006;    // Proporcional para o controle de ângulo
+        double kPdistance = 0.01;  // Controle proporcional para a distância
+        double kPangle = 0.006;    // Controle proporcional para o ângulo
+        double kPcorrection = 0.01; // Correção proporcional para o eixo Y
 
         while (mod(distanceError) > threshold) {
-            x = getEncoderX(); // Atualiza a posição do encoder X
-            distanceError = distance - x; // Calcula o erro de distância
+            x = getEncoderX();  // Atualiza a posição no eixo X
+            y = getEncoderY();  // Atualiza a posição no eixo Y
+            distanceError = distance - x;  // Recalcula o erro de distância no eixo X
 
-            double distP = distanceError * kPdistance; // Controle proporcional para a distância
+            double distP = distanceError * kPdistance;  // Controle proporcional para a distância
 
-            // Pegue o ângulo atual do robô
-            double currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            double angleError = 0 - currentAngle; // Queremos manter o ângulo em 0 para movimento lateral
+            double currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);  // Obtém o ângulo atual do robô
+            double angleError = 0 - currentAngle;  // Erro no ângulo (queremos manter o robô reto)
 
-            double angleP = angleError * kPangle; // Controle proporcional para o ângulo
+            double angleP = angleError * kPangle;  // Controle proporcional para o ângulo
 
-            // Aqui ajustamos os motores para mover lateralmente
-            frontLeftMotor.setPower(distP-angleP);
-            frontRightMotor.setPower(-distP+angleP);
-            backLeftMotor.setPower(-distP-angleP);
-            backRightMotor.setPower(distP+angleP); // Lado direito (movimento oposto ao esquerdo)
+            double yCorrection = y * kPcorrection;  // Correção proporcional para o eixo Y
+
+            // Ajuste os motores para movimentar o robô e corrigir sua posição lateralmente
+            frontLeftMotor.setPower(distP - angleP - yCorrection);
+            frontRightMotor.setPower(-distP + angleP + yCorrection);
+            backLeftMotor.setPower(-distP - angleP - yCorrection);
+            backRightMotor.setPower(distP + angleP + yCorrection);
         }
 
         // Quando atingir a distância, pare os motores
@@ -246,33 +260,44 @@ public class Auto2Specimen extends LinearOpMode {
     }
 
     public void driveForward(double distance){
-        resetPositions();
-        double y = getEncoderY();
-        double distanceError = distance-y;
-        double treshold = 1;
+        resetPositions();  // Reseta os encoders e o IMU
+        double y = getEncoderY();  // Posição no eixo Y
+        double x = getEncoderX();  // Posição no eixo X
+        double distanceError = distance - y;  // Erro de distância no eixo Y
+        double threshold = 1;  // Limite de erro
 
-        double kPdistance = 0.015;
-        double kPangle = 0.005;
+        double kPdistance = 0.012;  // Controle proporcional para a distância
+        double kPangle = 0.007;     // Controle proporcional para o ângulo
+        double kPcorrection = 0.01; // Correção proporcional para o eixo X
 
+        while (mod(distanceError) > threshold) {
+            y = getEncoderY();  // Atualiza a posição no eixo Y
+            x = getEncoderX();  // Atualiza a posição no eixo X
+            distanceError = distance - y;  // Recalcula o erro de distância no eixo Y
 
-        while (mod(distanceError)>treshold) {
-            y = getEncoderY();
-            distanceError = distance - y;
+            double distP = distanceError * kPdistance;  // Controle proporcional para a distância
 
-            double distP = distanceError*kPdistance;
+            double currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);  // Obtém o ângulo atual do robô
+            double angleError = 0 - currentAngle;  // Erro no ângulo (queremos manter o robô reto)
 
-            double currentAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            double angleError = 0-currentAngle;
+            double angleP = angleError * kPangle;  // Controle proporcional para o ângulo
 
+            double xCorrection = x * kPcorrection;  // Correção proporcional para o eixo X
 
-            double angleP = angleError*kPangle;
-
-            frontLeftMotor.setPower(distP-angleP);
-            frontRightMotor.setPower(distP+angleP);
-            backLeftMotor.setPower(distP-angleP);
-            backRightMotor.setPower(distP+angleP);
+            // Ajuste os motores para movimentar o robô e corrigir sua posição
+            frontLeftMotor.setPower(distP - angleP - xCorrection);
+            frontRightMotor.setPower(distP + angleP + xCorrection);
+            backLeftMotor.setPower(distP - angleP - xCorrection);
+            backRightMotor.setPower(distP + angleP + xCorrection);
         }
+
+        // Quando atingir a distância, pare os motores
+        frontLeftMotor.setPower(0);
+        frontRightMotor.setPower(0);
+        backLeftMotor.setPower(0);
+        backRightMotor.setPower(0);
     }
+
     public void driveStop(){
         frontLeftMotor.setPower(0);
         frontRightMotor.setPower(0);
